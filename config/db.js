@@ -1,4 +1,4 @@
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 require("dotenv").config();
 
 // Validación de las variables de entorno
@@ -24,15 +24,15 @@ const pool = mysql.createPool({
 });
 
 // Manejo del cierre del pool
-process.on("SIGINT", () => {
-  pool.end((err) => {
-    if (err) {
-      console.error("Error al cerrar la conexión a la base de datos:", err);
-    } else {
-      console.log("Conexión a la base de datos cerrada.");
-    }
+process.on("SIGINT", async () => {
+  try {
+    await pool.end();
+    console.log("Conexión a la base de datos cerrada.");
+  } catch (err) {
+    console.error("Error al cerrar la conexión a la base de datos:", err);
+  } finally {
     process.exit(0);
-  });
+  }
 });
 
 module.exports = pool;

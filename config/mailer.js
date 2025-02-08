@@ -36,26 +36,26 @@ async function authorize() {
 
 // Enviar correo con Gmail
 async function sendNotification(email, subject, text) {
-  const auth = await authorize();
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      type: "OAuth2",
-      user: process.env.EMAIL_USER,
-      clientId: auth._clientId,
-      clientSecret: auth._clientSecret,
-      refreshToken: auth.credentials.refresh_token,
-    },
-  });
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: subject,
-    text: text,
-  };
-
   try {
+    const auth = await authorize();
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        type: "OAuth2",
+        user: process.env.EMAIL_USER,
+        clientId: auth._clientId,
+        clientSecret: auth._clientSecret,
+        refreshToken: auth.credentials.refresh_token,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: subject,
+      text: text,
+    };
+
     const result = await transporter.sendMail(mailOptions);
     console.log("Correo enviado:", result);
   } catch (error) {

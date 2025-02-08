@@ -5,7 +5,7 @@ const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 // Ruta para obtener los detalles de una orden por su ID
-router.get("/:orderId", verifyToken, isAdmin, (req, res) => {
+router.get("/:orderId", verifyToken, isAdmin, async (req, res) => {
   const { orderId } = req.params;
 
   const query = `
@@ -23,14 +23,17 @@ router.get("/:orderId", verifyToken, isAdmin, (req, res) => {
     WHERE od.order_id = ?
   `;
 
-  db.query(query, [orderId], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (results.length === 0)
+  try {
+    const [results] = await db.query(query, [orderId]);
+    if (results.length === 0) {
       return res
         .status(404)
         .json({ message: "Detalles de la orden no encontrados" });
+    }
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

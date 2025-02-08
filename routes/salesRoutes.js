@@ -5,15 +5,19 @@ const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 // Ruta para que los administradores vean todas las ventas
-router.get("/sales", verifyToken, isAdmin, (req, res) => {
-  db.query("SELECT * FROM sales ORDER BY created_at DESC", (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+router.get("/sales", verifyToken, isAdmin, async (req, res) => {
+  try {
+    const [results] = await db.query(
+      "SELECT * FROM sales ORDER BY created_at DESC"
+    );
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Ruta para obtener los productos más vendidos
-router.get("/top-products", verifyToken, isAdmin, (req, res) => {
+// Ruta para obtener los productos más vendidos (disponible para el público)
+router.get("/top-products", async (req, res) => {
   const query = `
     SELECT 
       p.id AS product_id, 
@@ -28,10 +32,12 @@ router.get("/top-products", verifyToken, isAdmin, (req, res) => {
     LIMIT 10
   `;
 
-  db.query(query, (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const [results] = await db.query(query);
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

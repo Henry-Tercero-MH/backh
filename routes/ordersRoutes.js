@@ -5,7 +5,7 @@ const { verifyToken, isAdmin } = require("../middleware/authMiddleware");
 const router = express.Router();
 
 // Ruta para que los administradores vean todas las órdenes
-router.get("/admin", verifyToken, isAdmin, (req, res) => {
+router.get("/admin", verifyToken, isAdmin, async (req, res) => {
   const query = `
     SELECT 
       o.id AS order_id, 
@@ -19,7 +19,6 @@ router.get("/admin", verifyToken, isAdmin, (req, res) => {
       a.street AS address_street,
       a.city AS address_city,
       a.zone AS address_zone,
-      a.zip_code AS address_zip_code,
       a.postal_code AS address_postal_code,
       od.product_id,
       od.quantity,
@@ -35,8 +34,8 @@ router.get("/admin", verifyToken, isAdmin, (req, res) => {
     ORDER BY o.created_at DESC
   `;
 
-  db.query(query, (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const [results] = await db.query(query);
 
     // Agrupar los resultados por orden
     const orders = results.reduce((acc, row) => {
@@ -67,7 +66,6 @@ router.get("/admin", verifyToken, isAdmin, (req, res) => {
             street: row.address_street,
             city: row.address_city,
             zone: row.address_zone,
-            zip_code: row.address_zip_code,
             postal_code: row.address_postal_code,
           },
           products: row.product_id ? [product] : [],
@@ -78,22 +76,25 @@ router.get("/admin", verifyToken, isAdmin, (req, res) => {
     }, []);
 
     res.json(orders);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Ruta para actualizar el estado de una orden
-router.put("/:orderId", verifyToken, isAdmin, (req, res) => {
+router.put("/:orderId", verifyToken, isAdmin, async (req, res) => {
   const { orderId } = req.params;
   const { status } = req.body;
 
-  db.query(
-    "UPDATE orders SET status = ? WHERE id = ?",
-    [status, orderId],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ message: "Estado de la orden actualizado con éxito" });
-    }
-  );
+  try {
+    await db.query("UPDATE orders SET status = ? WHERE id = ?", [
+      status,
+      orderId,
+    ]);
+    res.json({ message: "Estado de la orden actualizado con éxito" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
