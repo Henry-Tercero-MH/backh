@@ -7,7 +7,7 @@ const path = require("path");
 const logger = require("./config/logger");
 
 const app = express();
-
+app.set("trust proxy", 1); // Permite confiar en proxies (como Nginx o Vercel)
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // Middleware de seguridad
 app.use(helmet()); // Protege contra vulnerabilidades comunes
